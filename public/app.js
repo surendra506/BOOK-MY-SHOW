@@ -154,6 +154,27 @@ document.addEventListener("change", (event) => {
   }
 });
 
+// Centralized <img> fallback handler (avoids inline onerror, which some deployments block via CSP).
+document.addEventListener("error", (event) => {
+  const img = event.target;
+  if (!(img instanceof HTMLImageElement)) return;
+
+  const rawFallbacks = img.dataset.fallback || "";
+  const fallbacks = rawFallbacks.split("|").map((s) => s.trim()).filter(Boolean);
+  const next = fallbacks.shift();
+  if (next) {
+    img.dataset.fallback = fallbacks.join("|");
+    img.src = next;
+    return;
+  }
+
+  img.style.display = "none";
+  const fb = img.nextElementSibling;
+  if (fb && fb instanceof HTMLElement) {
+    fb.style.display = fb.dataset.show || "flex";
+  }
+}, true);
+
 async function init() {
   const response = await fetch("/api/matches");
   state.matches = await response.json();
@@ -521,33 +542,19 @@ function teamChip({ label, value, active, subtitle }) {
 function teamLogoBlock(code) {
   const [src, ...fallbacks] = teamLogoCandidates(code);
   const fallbackAttr = fallbacks.length ? ` data-fallback="${escapeHtmlAttr(fallbacks.join("|"))}"` : "";
-  const handler = [
-    "const list=(this.dataset.fallback||'').split('|').filter(Boolean);",
-    "const next=list.shift();",
-    "if(next){this.dataset.fallback=list.join('|');this.src=next;return;}",
-    "this.style.display='none';",
-    "const fb=this.nextElementSibling;if(fb)fb.style.display='flex';"
-  ].join("");
   return `
-    <img class="team-logo" src="${escapeHtmlAttr(src)}" alt="" loading="lazy"${fallbackAttr} onerror="${handler}" />
-    <span class="team-logo-fallback" style="display:none">${escapeHtml(code)}</span>
+    <img class="team-logo" src="${escapeHtmlAttr(src)}" alt="" loading="lazy" decoding="async"${fallbackAttr} />
+    <span class="team-logo-fallback" data-show="flex" style="display:none">${escapeHtml(code)}</span>
   `;
 }
 
 function teamLogoInline(code) {
   const [src, ...fallbacks] = teamLogoCandidates(code);
   const fallbackAttr = fallbacks.length ? ` data-fallback="${escapeHtmlAttr(fallbacks.join("|"))}"` : "";
-  const handler = [
-    "const list=(this.dataset.fallback||'').split('|').filter(Boolean);",
-    "const next=list.shift();",
-    "if(next){this.dataset.fallback=list.join('|');this.src=next;return;}",
-    "this.style.display='none';",
-    "const fb=this.nextElementSibling;if(fb)fb.style.display='inline-flex';"
-  ].join("");
   return `
     <span class="team-mini" aria-hidden="true">
-      <img class="team-mini-logo" src="${escapeHtmlAttr(src)}" alt="" loading="lazy"${fallbackAttr} onerror="${handler}" />
-      <span class="team-mini-fallback" style="display:none">${escapeHtml(code)}</span>
+      <img class="team-mini-logo" src="${escapeHtmlAttr(src)}" alt="" loading="lazy" decoding="async"${fallbackAttr} />
+      <span class="team-mini-fallback" data-show="inline-flex" style="display:none">${escapeHtml(code)}</span>
     </span>
   `;
 }
@@ -555,18 +562,11 @@ function teamLogoInline(code) {
 function teamLogoBadge(code, size = "sm") {
   const [src, ...fallbacks] = teamLogoCandidates(code);
   const fallbackAttr = fallbacks.length ? ` data-fallback="${escapeHtmlAttr(fallbacks.join("|"))}"` : "";
-  const handler = [
-    "const list=(this.dataset.fallback||'').split('|').filter(Boolean);",
-    "const next=list.shift();",
-    "if(next){this.dataset.fallback=list.join('|');this.src=next;return;}",
-    "this.style.display='none';",
-    "const fb=this.nextElementSibling;if(fb)fb.style.display='flex';"
-  ].join("");
 
   return `
     <span class="team-badge team-badge--${escapeHtmlAttr(size)}" aria-hidden="true">
-      <img class="team-badge-img" src="${escapeHtmlAttr(src)}" alt="" loading="lazy"${fallbackAttr} onerror="${handler}" />
-      <span class="team-badge-fallback" style="display:none">${escapeHtml(code)}</span>
+      <img class="team-badge-img" src="${escapeHtmlAttr(src)}" alt="" loading="lazy" decoding="async"${fallbackAttr} />
+      <span class="team-badge-fallback" data-show="flex" style="display:none">${escapeHtml(code)}</span>
     </span>
   `;
 }
@@ -598,16 +598,9 @@ function teamHeroImage(code) {
   if (!code) return `<span class="match-hero-fallback">?</span>`;
   const [src, ...fallbacks] = teamLogoCandidates(code);
   const fallbackAttr = fallbacks.length ? ` data-fallback="${escapeHtmlAttr(fallbacks.join("|"))}"` : "";
-  const handler = [
-    "const list=(this.dataset.fallback||'').split('|').filter(Boolean);",
-    "const next=list.shift();",
-    "if(next){this.dataset.fallback=list.join('|');this.src=next;return;}",
-    "this.style.display='none';",
-    "const fb=this.nextElementSibling;if(fb)fb.style.display='flex';"
-  ].join("");
   return `
-    <img class="match-hero-team-img" src="${escapeHtmlAttr(src)}" alt="" loading="lazy"${fallbackAttr} onerror="${handler}" />
-    <span class="match-hero-fallback" style="display:none">${escapeHtml(code)}</span>
+    <img class="match-hero-team-img" src="${escapeHtmlAttr(src)}" alt="" loading="lazy" decoding="async"${fallbackAttr} />
+    <span class="match-hero-fallback" data-show="flex" style="display:none">${escapeHtml(code)}</span>
   `;
 }
 
