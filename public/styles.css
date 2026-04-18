@@ -547,10 +547,9 @@ button {
 }
 
 .match-hero-team-img {
-  width: min(200px, 70%);
-  height: min(200px, 70%);
-  max-width: 200px;
-  max-height: 200px;
+  width: min(240px, 86%);
+  height: auto;
+  aspect-ratio: 1 / 1;
   border-radius: 18px;
   object-fit: cover;
   background: rgba(255, 255, 255, 0.92);
@@ -559,10 +558,9 @@ button {
 }
 
 .match-hero-fallback {
-  width: min(200px, 70%);
-  height: min(200px, 70%);
-  max-width: 200px;
-  max-height: 200px;
+  width: min(240px, 86%);
+  height: auto;
+  aspect-ratio: 1 / 1;
   border-radius: 18px;
   display: flex;
   align-items: center;
@@ -572,6 +570,17 @@ button {
   font-weight: 1000;
   font-size: 34px;
   letter-spacing: 0.04em;
+}
+
+.match-hero--card .match-hero-team-img,
+.match-hero--card .match-hero-fallback {
+  width: min(150px, 92%);
+  border-radius: 16px;
+}
+
+.match-hero--detail .match-hero-team-img,
+.match-hero--detail .match-hero-fallback {
+  width: min(260px, 86%);
 }
 
 .match-hero-code {
@@ -611,8 +620,7 @@ button {
 
   .match-hero-team-img,
   .match-hero-fallback {
-    max-width: 150px;
-    max-height: 150px;
+    width: min(170px, 80%);
     border-radius: 14px;
   }
 }
