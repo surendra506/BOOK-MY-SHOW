@@ -181,6 +181,12 @@ function filteredMatches() {
 }
 
 function header() {
+  const cities = ["All Cities", ...new Set(state.matches.map((match) => match.location))].sort((a, b) => {
+    if (a === "All Cities") return -1;
+    if (b === "All Cities") return 1;
+    return a.localeCompare(b);
+  });
+
   return `
     <div class="site-header">
       <header class="topbar">
@@ -192,7 +198,7 @@ function header() {
           <input data-search value="${state.search}" placeholder="Search for matches, teams, venues" />
         </label>
         <select class="city-select" data-city aria-label="Filter by city">
-          ${["All Cities", "Kolkata", "Ahmedabad", "Mumbai", "Lucknow"].map((city) => (
+          ${cities.map((city) => (
             `<option ${state.city === city ? "selected" : ""}>${city}</option>`
           )).join("")}
         </select>
@@ -478,7 +484,10 @@ function categoryRow(category) {
   return `
     <button class="category-row ${left === 0 ? "sold" : ""}" data-action="selectCategory" data-id="${category.id}">
       <span style="background:${category.color}"></span>
-      <strong>${category.price}</strong>
+      <div>
+        <strong>${category.price}</strong>
+        <p>${category.label}</p>
+      </div>
       <small>${left ? `${left} left` : "Sold out"}</small>
     </button>
   `;

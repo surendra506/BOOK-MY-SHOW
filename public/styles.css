@@ -820,6 +820,13 @@ h2 {
   color: var(--muted);
 }
 
+.category-row p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.25;
+}
+
 .category-row.sold {
   opacity: 0.42;
 }
@@ -834,6 +841,11 @@ h2 {
 
 .seat-layout-image {
   width: min(980px, 88%);
+  border: 0;
+  background: transparent;
+  padding: 0;
+  position: relative;
+  cursor: zoom-in;
 }
 
 .seat-layout-image img {
@@ -843,6 +855,22 @@ h2 {
   object-fit: contain;
   border-radius: 8px;
   box-shadow: 0 22px 60px rgba(16, 24, 40, 0.16);
+}
+
+.seat-layout-image span {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  background: rgba(17, 24, 39, 0.78);
+  color: white;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.seat-layout-image:hover img {
+  box-shadow: 0 26px 70px rgba(16, 24, 40, 0.24);
 }
 
 .stadium {
@@ -916,6 +944,46 @@ h2 {
   background: rgba(20, 24, 31, 0.72);
   z-index: 40;
   padding: 18px;
+}
+
+.layout-zoom-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 26px;
+  background: rgba(10, 14, 22, 0.82);
+}
+
+.layout-zoom-modal {
+  width: min(1180px, 96vw);
+  max-height: 92vh;
+  position: relative;
+  overflow: auto;
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.layout-zoom-modal img {
+  width: 100%;
+  min-width: 760px;
+  display: block;
+  object-fit: contain;
+}
+
+.zoom-close {
+  position: sticky;
+  top: 0;
+  left: auto;
+  float: right;
+  z-index: 2;
+  margin-bottom: 8px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: 0 6px 16px rgba(16, 24, 40, 0.15);
 }
 
 .seat-modal {
