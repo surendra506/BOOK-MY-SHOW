@@ -406,7 +406,7 @@ function header() {
         </button>
         <label class="search">
           <span>Search</span>
-          <input data-search value="${state.search}" placeholder="Search for matches, teams, venues" />
+          <input data-search value="${state.search}" />
         </label>
         <select class="city-select" data-city aria-label="Filter by city">
           ${cities.map((city) => (
