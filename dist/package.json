@@ -1,0 +1,10 @@
+{
+  "name": "ipl-ticket-booking",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "description": "Production build for the IPL ticket booking web application."
+}
