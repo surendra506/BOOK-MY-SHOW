@@ -1057,7 +1057,8 @@ h2 {
 }
 
 .pickup-card,
-.address-card {
+.address-card,
+.customer-form {
   border: 1px solid #d6d9df;
   border-radius: 8px;
   padding: 20px;
@@ -1085,6 +1086,59 @@ h2 {
   background: #f7e7ec;
   color: var(--brand);
   font-weight: 900;
+}
+
+.customer-form {
+  background: #fbfcfe;
+}
+
+.form-heading h3 {
+  margin: 0 0 6px;
+}
+
+.form-heading p {
+  margin: 0 0 18px;
+  color: var(--muted);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.form-grid label {
+  display: grid;
+  gap: 7px;
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.form-grid input,
+.form-grid textarea {
+  width: 100%;
+  border: 1px solid #d6d9df;
+  border-radius: 8px;
+  padding: 12px 13px;
+  background: white;
+  color: var(--ink);
+  outline: 0;
+}
+
+.form-grid input:focus,
+.form-grid textarea:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(230, 75, 103, 0.12);
+}
+
+.form-grid textarea {
+  min-height: 86px;
+  resize: vertical;
+}
+
+.full-field {
+  grid-column: 1 / -1;
 }
 
 .summary-row {
@@ -1214,6 +1268,10 @@ h2 {
   .sports-heading {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
   }
 
   .event-layout,
