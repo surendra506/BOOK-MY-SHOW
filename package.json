@@ -1,0 +1,11 @@
+{
+  "name": "ipl-ticket-booking",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.mjs",
+    "start": "node server.mjs"
+  },
+  "description": "BookMyShow-inspired IPL ticket booking web application."
+}
