@@ -617,7 +617,7 @@ button {
   }
 }
 
-.sports-card img {
+.sports-card-media > img {
   width: 100%;
   aspect-ratio: 0.78 / 1;
   display: block;
