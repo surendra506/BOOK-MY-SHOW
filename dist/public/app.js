@@ -53,6 +53,33 @@ const categories = [
 ];
 
 const sponsors = ["TATA", "Angel One", "RuPay", "CEAT", "My11Circle"];
+const monthIndex = {
+  JAN: 0,
+  FEB: 1,
+  MAR: 2,
+  APR: 3,
+  MAY: 4,
+  JUN: 5,
+  JUL: 6,
+  AUG: 7,
+  SEP: 8,
+  OCT: 9,
+  NOV: 10,
+  DEC: 11
+};
+
+function parseRawDate(rawDate) {
+  const [day, month, year] = String(rawDate || "").split("-");
+  return new Date(2000 + Number(year), monthIndex[month], Number(day));
+}
+
+function todayRawDate() {
+  const today = new Date();
+  const day = String(today.getDate()).padStart(2, "0");
+  const month = Object.entries(monthIndex).find(([, index]) => index === today.getMonth())?.[0] || "JAN";
+  const year = String(today.getFullYear()).slice(-2);
+  return `${day}-${month}-${year}`;
+}
 
 window.addEventListener("popstate", () => {
   state.route = parseRoute();
@@ -292,10 +319,13 @@ function matchesCategoryFilter(match) {
 
 function matchesDateFilter(match) {
   if (state.filters.date === "all") return true;
-  if (state.filters.date === "today") return match.rawDate === "18-APR-26";
-  if (state.filters.date === "weekend") return match.date.startsWith("Sat") || match.date.startsWith("Sun");
-  if (state.filters.date === "apr") return match.rawDate?.includes("APR");
-  if (state.filters.date === "may") return match.rawDate?.includes("MAY");
+  if (state.filters.date === "today") return match.rawDate === todayRawDate();
+  if (state.filters.date === "weekend") {
+    const day = parseRawDate(match.rawDate).getDay();
+    return day === 0 || day === 6;
+  }
+  if (state.filters.date === "apr") return parseRawDate(match.rawDate).getMonth() === 3;
+  if (state.filters.date === "may") return parseRawDate(match.rawDate).getMonth() === 4;
   return true;
 }
 
@@ -572,6 +602,12 @@ function teamLogoBadge(code, size = "sm") {
 }
 
 function matchHero({ homeCode, awayCode, bg, title, variant }) {
+  if ((variant || "card") === "card") {
+    return `
+      <div class="match-hero match-hero--card"${bg ? ` style="--hero-bg: url('${escapeHtmlAttr(bg)}')"` : ""} aria-label="${escapeHtmlAttr(title || "")}"></div>
+    `;
+  }
+
   const home = homeCode || "";
   const away = awayCode || "";
   const bgStyle = bg ? ` style="--hero-bg: url('${escapeHtmlAttr(bg)}')"` : "";
