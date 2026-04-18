@@ -11,6 +11,24 @@ const state = {
   bookingRef: null,
   search: "",
   city: "All Cities",
+  page: 1,
+  pageSize: 12,
+  filters: {
+    category: "cricket",
+    date: "all",
+    time: "all",
+    price: "all",
+    venue: "all",
+    team: "all"
+  },
+  ui: {
+    filterOpen: {
+      categories: true,
+      date: false,
+      more: false,
+      price: false
+    }
+  },
   customer: {
     name: "",
     email: "",
@@ -46,6 +64,7 @@ document.addEventListener("click", (event) => {
   if (!target) return;
 
   const { action, id, value } = target.dataset;
+  if (target.closest("summary")) event.preventDefault();
   if (action === "home") navigate("/");
   if (action === "details") navigate(`/match/${id}`);
   if (action === "startSeats") startSeatSelection(id);
@@ -58,11 +77,61 @@ document.addEventListener("click", (event) => {
   if (action === "proceedCheckout") continueToTicketMode();
   if (action === "pay") completeBooking();
   if (action === "reset") navigate("/");
+  if (action === "viewAllMatches") navigate("/matches");
+  if (action === "setFilter") {
+    const key = target.dataset.filter;
+    const next = target.dataset.value ?? "all";
+    if (!key) return;
+    state.filters[key] = next;
+    state.page = 1;
+    const section = target.dataset.section;
+    if (section && state.ui?.filterOpen) state.ui.filterOpen[section] = true;
+    render();
+  }
+  if (action === "clearSection") {
+    const section = target.dataset.section;
+    if (section === "categories") state.filters.category = "cricket";
+    if (section === "date") state.filters.date = "all";
+    if (section === "price") state.filters.price = "all";
+    if (section === "more") {
+      state.filters.time = "all";
+      state.filters.venue = "all";
+    }
+    state.page = 1;
+    if (section && state.ui?.filterOpen) state.ui.filterOpen[section] = true;
+    render();
+  }
+  if (action === "browseVenues") {
+    if (state.ui?.filterOpen) state.ui.filterOpen.more = true;
+    render();
+  }
+  if (action === "page") {
+    state.page = Number(value);
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  if (action === "clearFilters") {
+    state.city = "All Cities";
+    state.search = "";
+    state.page = 1;
+    state.filters = { category: "cricket", date: "all", time: "all", price: "all", venue: "all", team: "all" };
+    render();
+  }
+});
+
+document.addEventListener("toggle", (event) => {
+  const details = event.target;
+  if (!details || !(details instanceof HTMLDetailsElement)) return;
+  if (!details.matches(".filter-section[data-filter-section]")) return;
+  const key = details.dataset.filterSection;
+  if (!key || !state.ui?.filterOpen) return;
+  state.ui.filterOpen[key] = details.open;
 });
 
 document.addEventListener("input", (event) => {
   if (event.target.matches("[data-search]")) {
     state.search = event.target.value;
+    state.page = 1;
     render();
   }
 
@@ -74,6 +143,13 @@ document.addEventListener("input", (event) => {
 document.addEventListener("change", (event) => {
   if (event.target.matches("[data-city]")) {
     state.city = event.target.value;
+    state.page = 1;
+    render();
+  }
+
+  if (event.target.matches("[data-filter]")) {
+    state.filters[event.target.dataset.filter] = event.target.value;
+    state.page = 1;
     render();
   }
 });
@@ -175,9 +251,56 @@ function filteredMatches() {
   const q = state.search.trim().toLowerCase();
   return state.matches.filter((match) => {
     const cityMatch = state.city === "All Cities" || match.location === state.city;
-    const searchMatch = !q || `${match.title} ${match.venue} ${match.league}`.toLowerCase().includes(q);
-    return cityMatch && searchMatch;
+    const searchMatch = !q || `${match.matchNo} ${match.title} ${match.venue} ${match.league} ${match.date} ${match.time}`.toLowerCase().includes(q);
+    const categoryMatch = matchesCategoryFilter(match);
+    const dateMatch = matchesDateFilter(match);
+    const timeMatch = matchesTimeFilter(match);
+    const priceMatch = matchesPriceFilter(match);
+    const venueMatch = matchesVenueFilter(match);
+    const teamMatch = matchesTeamFilter(match);
+    return cityMatch && searchMatch && categoryMatch && dateMatch && timeMatch && priceMatch && venueMatch && teamMatch;
   });
+}
+
+function matchesCategoryFilter(match) {
+  // This app currently lists only cricket events; keep the hook for future categories.
+  if (state.filters.category === "all") return true;
+  if (state.filters.category === "cricket") return true;
+  return true;
+}
+
+function matchesDateFilter(match) {
+  if (state.filters.date === "all") return true;
+  if (state.filters.date === "today") return match.rawDate === "18-APR-26";
+  if (state.filters.date === "weekend") return match.date.startsWith("Sat") || match.date.startsWith("Sun");
+  if (state.filters.date === "apr") return match.rawDate?.includes("APR");
+  if (state.filters.date === "may") return match.rawDate?.includes("MAY");
+  return true;
+}
+
+function matchesTimeFilter(match) {
+  if (state.filters.time === "all") return true;
+  if (state.filters.time === "afternoon") return match.time === "3:30 PM";
+  if (state.filters.time === "evening") return match.time === "7:30 PM";
+  return true;
+}
+
+function matchesPriceFilter(match) {
+  if (state.filters.price === "all") return true;
+  if (state.filters.price === "under1000") return match.priceFrom < 1000;
+  if (state.filters.price === "1000to1300") return match.priceFrom >= 1000 && match.priceFrom <= 1300;
+  if (state.filters.price === "above1300") return match.priceFrom > 1300;
+  return true;
+}
+
+function matchesVenueFilter(match) {
+  if (state.filters.venue === "all") return true;
+  return match.venue === state.filters.venue;
+}
+
+function matchesTeamFilter(match) {
+  if (state.filters.team === "all") return true;
+  return match.teams?.includes(state.filters.team);
 }
 
 function header() {
@@ -218,7 +341,10 @@ function header() {
 
 function renderHome() {
   const matches = filteredMatches();
-  const cards = buildSportsCards(matches);
+  const totalPages = Math.max(1, Math.ceil(matches.length / state.pageSize));
+  if (state.page > totalPages) state.page = totalPages;
+  const start = (state.page - 1) * state.pageSize;
+  const cards = matches.slice(start, start + state.pageSize);
   app.innerHTML = `
     ${header()}
     <main class="home-page explore-page">
@@ -227,27 +353,24 @@ function renderHome() {
       </section>
       <section class="explore-shell">
         <aside class="filters-panel">
-          <h2>Filters</h2>
-          ${filterBlock("Categories", "Cricket", "Clear")}
-          ${filterBlock("Date", "Today", "Clear")}
-          ${filterBlock("More Filters", "Outdoor Events", "Clear")}
-          ${filterBlock("Price", "₹0 - ₹3000", "Clear")}
-          <button class="browse-button">Browse by Venues</button>
+          ${filtersPanel()}
         </aside>
         <div class="sports-listing">
           <div class="sports-heading">
             <div>
               <h1>Sports in ${state.city === "All Cities" ? "Ahmedabad" : state.city}</h1>
-              <p>Explore live IPL fixtures, fan parks, and stadium experiences with real-time ticket categories, venue details, and quick booking options.</p>
+              <p>${matches.length} upcoming match(es) found. Showing ${cards.length ? start + 1 : 0}-${Math.min(start + cards.length, matches.length)} with match number, date, day, time, home, away, and venue details.</p>
             </div>
             <div>
               <button>Cricket</button>
               <button>Outdoor</button>
+              <button class="view-all-matches" data-action="viewAllMatches" type="button">View All Matches</button>
             </div>
           </div>
           <div class="sports-grid">
             ${cards.map(sportsCard).join("") || emptyState()}
           </div>
+          ${pagination(totalPages, matches.length)}
         </div>
       </section>
       <section class="info-panel">
@@ -297,6 +420,344 @@ function renderHome() {
   `;
 }
 
+function renderAllMatches() {
+  const matches = filteredMatches();
+  const teamMap = teamCodeMap(state.matches);
+  const teams = ["all", ...new Set(state.matches.flatMap((match) => match.teams || []))].sort((a, b) => {
+    if (a === "all") return -1;
+    if (b === "all") return 1;
+    return a.localeCompare(b);
+  });
+
+  app.innerHTML = `
+    ${header()}
+    <main class="matches-page">
+      <section class="matches-banner">
+        <img src="/assists/dashboard.avif" alt="TATA IPL 2026 matches banner" />
+      </section>
+      <section class="matches-shell">
+        <div class="matches-feed">
+          <div class="matches-head">
+            <div>
+              <h1>All Upcoming Matches</h1>
+              <p>${matches.length} match(es) found based on your filters. Click any match to view details.</p>
+            </div>
+            <button class="view-all-matches secondary" data-action="home" type="button">Back</button>
+          </div>
+          <div class="matches-list">
+            ${matches.map(allMatchesCard).join("") || emptyState()}
+          </div>
+        </div>
+        <aside class="teams-rail" aria-label="Teams">
+          <h2>Teams</h2>
+          <div class="teams-grid">
+            ${teams.map((team) => team === "all"
+              ? teamChip({ label: "All", value: "all", active: state.filters.team === "all" })
+              : teamChip({
+                  label: teamMap[team] || team.split(" ").map((w) => w[0]).join("").slice(0, 3).toUpperCase(),
+                  value: team,
+                  active: state.filters.team === team,
+                  subtitle: team
+                })
+            ).join("")}
+          </div>
+        </aside>
+      </section>
+    </main>
+  `;
+}
+
+function allMatchesCard(match) {
+  const teamMap = teamCodeMap(state.matches);
+  const homeCode = teamCodeForName(match.teams?.[0], teamMap);
+  const awayCode = teamCodeForName(match.teams?.[1], teamMap);
+  return `
+    <article class="match-row" data-action="details" data-id="${match.id}">
+      <div class="match-row-top">
+        <div class="match-row-titlewrap">
+          ${homeCode ? teamLogoInline(homeCode) : ""}
+          ${awayCode ? teamLogoInline(awayCode) : ""}
+          <strong class="match-row-title">${match.shortTitle || match.title}</strong>
+        </div>
+        <span class="match-row-date">${match.date} • ${match.time}</span>
+      </div>
+      <div class="match-row-meta">
+        <span><b>Home:</b> ${match.teams?.[0] || "-"}</span>
+        <span><b>Away:</b> ${match.teams?.[1] || "-"}</span>
+        <span><b>Venue:</b> ${match.venue}</span>
+      </div>
+      <div class="match-row-bottom">
+        <span class="match-row-pill">Match ${match.matchNo}</span>
+        <span class="match-row-price">${money(match.priceFrom)} onwards</span>
+        <span class="match-row-availability">${match.availability || "Available"} tickets</span>
+      </div>
+    </article>
+  `;
+}
+
+function teamChip({ label, value, active, subtitle }) {
+  const logo = subtitle ? teamLogoBlock(label) : `<span class="team-logo-fallback">${escapeHtml(label)}</span>`;
+  return `
+    <button
+      type="button"
+      class="team-chip ${active ? "active" : ""}"
+      data-action="setFilter"
+      data-filter="team"
+      data-value="${escapeHtmlAttr(value)}"
+      title="${subtitle ? escapeHtmlAttr(subtitle) : ""}"
+      aria-pressed="${active ? "true" : "false"}"
+    >
+      <div class="team-chip-top">
+        <span class="team-logo-wrap" aria-hidden="true">
+          ${logo}
+        </span>
+        <span class="team-chip-code">${escapeHtml(label)}</span>
+      </div>
+      ${subtitle ? `<span class="team-chip-name">${escapeHtml(subtitle)}</span>` : ""}
+    </button>
+  `;
+}
+
+function teamLogoBlock(code) {
+  const [src, ...fallbacks] = teamLogoCandidates(code);
+  const fallbackAttr = fallbacks.length ? ` data-fallback="${escapeHtmlAttr(fallbacks.join("|"))}"` : "";
+  const handler = [
+    "const list=(this.dataset.fallback||'').split('|').filter(Boolean);",
+    "const next=list.shift();",
+    "if(next){this.dataset.fallback=list.join('|');this.src=next;return;}",
+    "this.style.display='none';",
+    "const fb=this.nextElementSibling;if(fb)fb.style.display='flex';"
+  ].join("");
+  return `
+    <img class="team-logo" src="${escapeHtmlAttr(src)}" alt="" loading="lazy"${fallbackAttr} onerror="${handler}" />
+    <span class="team-logo-fallback" style="display:none">${escapeHtml(code)}</span>
+  `;
+}
+
+function teamLogoInline(code) {
+  const [src, ...fallbacks] = teamLogoCandidates(code);
+  const fallbackAttr = fallbacks.length ? ` data-fallback="${escapeHtmlAttr(fallbacks.join("|"))}"` : "";
+  const handler = [
+    "const list=(this.dataset.fallback||'').split('|').filter(Boolean);",
+    "const next=list.shift();",
+    "if(next){this.dataset.fallback=list.join('|');this.src=next;return;}",
+    "this.style.display='none';",
+    "const fb=this.nextElementSibling;if(fb)fb.style.display='inline-flex';"
+  ].join("");
+  return `
+    <span class="team-mini" aria-hidden="true">
+      <img class="team-mini-logo" src="${escapeHtmlAttr(src)}" alt="" loading="lazy"${fallbackAttr} onerror="${handler}" />
+      <span class="team-mini-fallback" style="display:none">${escapeHtml(code)}</span>
+    </span>
+  `;
+}
+
+function teamLogoBadge(code, size = "sm") {
+  const [src, ...fallbacks] = teamLogoCandidates(code);
+  const fallbackAttr = fallbacks.length ? ` data-fallback="${escapeHtmlAttr(fallbacks.join("|"))}"` : "";
+  const handler = [
+    "const list=(this.dataset.fallback||'').split('|').filter(Boolean);",
+    "const next=list.shift();",
+    "if(next){this.dataset.fallback=list.join('|');this.src=next;return;}",
+    "this.style.display='none';",
+    "const fb=this.nextElementSibling;if(fb)fb.style.display='flex';"
+  ].join("");
+
+  return `
+    <span class="team-badge team-badge--${escapeHtmlAttr(size)}" aria-hidden="true">
+      <img class="team-badge-img" src="${escapeHtmlAttr(src)}" alt="" loading="lazy"${fallbackAttr} onerror="${handler}" />
+      <span class="team-badge-fallback" style="display:none">${escapeHtml(code)}</span>
+    </span>
+  `;
+}
+
+function matchHero({ homeCode, awayCode, bg, title, variant }) {
+  const home = homeCode || "";
+  const away = awayCode || "";
+  const bgStyle = bg ? ` style="--hero-bg: url('${escapeHtmlAttr(bg)}')"` : "";
+  return `
+    <div class="match-hero match-hero--${escapeHtmlAttr(variant || "card")}"${bgStyle} aria-label="${escapeHtmlAttr(title || "")}">
+      <div class="match-hero-sides">
+        <div class="match-hero-side match-hero-side--home">
+          ${teamHeroImage(home)}
+          <span class="match-hero-code">${escapeHtml(home || "HOME")}</span>
+        </div>
+        <div class="match-hero-center" aria-hidden="true">
+          <span class="match-hero-vs">VS</span>
+        </div>
+        <div class="match-hero-side match-hero-side--away">
+          ${teamHeroImage(away)}
+          <span class="match-hero-code">${escapeHtml(away || "AWAY")}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function teamHeroImage(code) {
+  if (!code) return `<span class="match-hero-fallback">?</span>`;
+  const [src, ...fallbacks] = teamLogoCandidates(code);
+  const fallbackAttr = fallbacks.length ? ` data-fallback="${escapeHtmlAttr(fallbacks.join("|"))}"` : "";
+  const handler = [
+    "const list=(this.dataset.fallback||'').split('|').filter(Boolean);",
+    "const next=list.shift();",
+    "if(next){this.dataset.fallback=list.join('|');this.src=next;return;}",
+    "this.style.display='none';",
+    "const fb=this.nextElementSibling;if(fb)fb.style.display='flex';"
+  ].join("");
+  return `
+    <img class="match-hero-team-img" src="${escapeHtmlAttr(src)}" alt="" loading="lazy"${fallbackAttr} onerror="${handler}" />
+    <span class="match-hero-fallback" style="display:none">${escapeHtml(code)}</span>
+  `;
+}
+
+function teamLogoCandidates(code) {
+  const normalized = String(code || "").trim().toLowerCase();
+  const candidates = [];
+  // Preferred folder.
+  for (const ext of ["png", "svg", "webp", "jpg", "jpeg"]) {
+    candidates.push(`/assists/team-logos/${normalized}.${ext}`);
+  }
+  // Your existing files already present in /assists (rcb.jpeg, mi.jpeg, etc).
+  for (const ext of ["png", "svg", "webp", "jpg", "jpeg"]) {
+    candidates.push(`/assists/${normalized}.${ext}`);
+  }
+  // Punjab special-case: file name is "punjba.jpeg" in your repo.
+  if (normalized === "pbks") {
+    candidates.push("/assists/punjba.jpeg", "/assists/punjab.jpeg", "/assists/pbks.jpeg");
+  }
+  return candidates;
+}
+
+function teamCodeForName(teamName, map) {
+  if (!teamName) return "";
+  const fromMap = map?.[teamName];
+  if (fromMap) return fromMap;
+  return teamName
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 4)
+    .toUpperCase();
+}
+
+function teamCodeMap(matches) {
+  const map = {};
+  for (const match of matches || []) {
+    if (!match?.shortTitle || !Array.isArray(match.teams) || match.teams.length < 2) continue;
+    const parts = match.shortTitle.split(" vs ").map((p) => p.trim()).filter(Boolean);
+    if (parts.length !== 2) continue;
+    map[match.teams[0]] = parts[0];
+    map[match.teams[1]] = parts[1];
+  }
+  return map;
+}
+
+function filtersPanel() {
+  const venueOptions = ["all", ...new Set(state.matches.map((match) => match.venue))].sort((a, b) => a.localeCompare(b));
+
+  return `
+    <h2>Filters</h2>
+    ${filterAccordionSection({
+      id: "categories",
+      title: "Categories",
+      open: !!state.ui?.filterOpen?.categories,
+      body: filterChips("category", "categories", [
+        ["cricket", "Cricket"]
+      ])
+    })}
+    ${filterAccordionSection({
+      id: "date",
+      title: "Date",
+      open: !!state.ui?.filterOpen?.date,
+      body: filterChips("date", "date", [
+        ["all", "All Dates"],
+        ["today", "Today"],
+        ["weekend", "Weekend"],
+        ["apr", "April"],
+        ["may", "May"]
+      ])
+    })}
+    ${filterAccordionSection({
+      id: "more",
+      title: "More Filters",
+      open: !!state.ui?.filterOpen?.more,
+      body: `
+        <div class="filter-subtitle">Time</div>
+        <div class="filter-chip-row">
+          ${filterChips("time", "more", [
+            ["all", "All Times"],
+            ["afternoon", "3:30 PM"],
+            ["evening", "7:30 PM"]
+          ])}
+        </div>
+        <div class="filter-subtitle">Venue</div>
+        <select class="filter-select" data-filter="venue" aria-label="Filter by venue">
+          ${venueOptions.map((venue) => (
+            `<option value="${escapeHtmlAttr(venue)}" ${state.filters.venue === venue ? "selected" : ""}>${venue === "all" ? "All Venues" : escapeHtml(venue)}</option>`
+          )).join("")}
+        </select>
+      `
+    })}
+    ${filterAccordionSection({
+      id: "price",
+      title: "Price",
+      open: !!state.ui?.filterOpen?.price,
+      body: filterChips("price", "price", [
+        ["all", "All Prices"],
+        ["under1000", "Below ₹1000"],
+        ["1000to1300", "₹1000 - ₹1300"],
+        ["above1300", "Above ₹1300"]
+      ])
+    })}
+    <button class="browse-button" type="button" data-action="browseVenues">Browse by Venues</button>
+  `;
+}
+
+function filterAccordionSection({ id, title, body, open }) {
+  return `
+    <details class="filter-section" data-filter-section="${id}" ${open ? "open" : ""}>
+      <summary>
+        <span class="filter-summary-left">
+          <span class="filter-caret" aria-hidden="true"></span>
+          <span class="filter-title">${title}</span>
+        </span>
+        <button class="filter-clear" type="button" data-action="clearSection" data-section="${id}">Clear</button>
+      </summary>
+      <div class="filter-body">
+        ${body}
+      </div>
+    </details>
+  `;
+}
+
+function filterChips(key, section, options) {
+  return options.map(([value, label]) => `
+    <button
+      type="button"
+      class="filter-chip ${state.filters[key] === value ? "active" : ""}"
+      data-action="setFilter"
+      data-filter="${key}"
+      data-value="${value}"
+      data-section="${section}"
+    >${label}</button>
+  `).join("");
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll("\"", "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function escapeHtmlAttr(value) {
+  return escapeHtml(value).replaceAll("\n", " ");
+}
+
 function filterBlock(title, value, action) {
   return `
     <div class="filter-block">
@@ -309,49 +770,49 @@ function filterBlock(title, value, action) {
   `;
 }
 
-function buildSportsCards(matches) {
-  if (!matches.length) return [];
+function filterSelect(title, key, options) {
+  return `
+    <label class="filter-block">
+      <div>
+        <strong>${title}</strong>
+      </div>
+      <select data-filter="${key}">
+        ${options.map(([value, label]) => `<option value="${value}" ${state.filters[key] === value ? "selected" : ""}>${label}</option>`).join("")}
+      </select>
+    </label>
+  `;
+}
 
-  const source = state.matches.length ? state.matches : matches;
-  const extra = [
-    {
-      ...(source[0] || {}),
-      id: source[0]?.id || "kkr-rr-2026",
-      title: "TATA IPL 2026",
-      shortTitle: "TATA IPL 2026",
-      venue: "Ahmedabad",
-      image: "/assists/download.png",
-      priceFrom: 750
-    },
-    {
-      ...(source[1] || {}),
-      id: source[1]?.id || "gt-csk-2026",
-      title: "Mumbai City FC vs East Bengal FC",
-      shortTitle: "Mumbai City FC vs East Bengal",
-      image: source[1]?.image || "/assists/media-desktop-gujarat-titans-vs-chennai-super-kings-tata-ipl-2026-0-2026-4-5-t-11-33-13.avif",
-      venue: "Mumbai Football Arena",
-      priceFrom: 499
-    },
-    {
-      ...(source[2] || {}),
-      id: source[2]?.id || "mi-lsg-2026",
-      title: "Gujarat Titans Fan Park",
-      shortTitle: "Gujarat Titans Fan Park",
-      image: source[2]?.image || "/assists/media-desktop-mumbai-indians-vs-lucknow-super-giants-0-2026-4-10-t-12-1-34.avif",
-      venue: "Narendra Modi Stadium",
-      priceFrom: 299
-    }
-  ].filter(Boolean);
+function pagination(totalPages, totalMatches) {
+  if (totalMatches === 0) return "";
 
-  return [...matches, ...extra].slice(0, 8);
+  return `
+    <nav class="pagination" aria-label="Match pagination">
+      <button data-action="page" data-value="${Math.max(1, state.page - 1)}" ${state.page === 1 ? "disabled" : ""}>Previous</button>
+      ${Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => `
+        <button class="${state.page === page ? "active" : ""}" data-action="page" data-value="${page}">${page}</button>
+      `).join("")}
+      <button data-action="page" data-value="${Math.min(totalPages, state.page + 1)}" ${state.page === totalPages ? "disabled" : ""}>Next</button>
+    </nav>
+  `;
 }
 
 function sportsCard(match) {
+  const teamMap = teamCodeMap(state.matches);
+  const homeName = match.teams?.[0] || "";
+  const awayName = match.teams?.[1] || "";
+  const homeCode = teamCodeForName(homeName, teamMap);
+  const awayCode = teamCodeForName(awayName, teamMap);
   return `
     <article class="sports-card" data-action="details" data-id="${match.id}">
-      <img src="${match.image}" alt="${match.shortTitle || match.title}" />
+      <div class="sports-card-media">
+        ${matchHero({ homeCode, awayCode, bg: match.image, title: match.shortTitle || match.title, variant: "card" })}
+      </div>
       <div>
+        <small class="match-number">Match ${match.matchNo}</small>
         <strong>${match.shortTitle || match.title}</strong>
+        <p><b>Home:</b> ${match.teams[0]}</p>
+        <p><b>Away:</b> ${match.teams[1]}</p>
         <p>${match.venue}</p>
         <small>${match.date} • ${match.time}</small>
         <span>${money(match.priceFrom)} onwards</span>
@@ -389,6 +850,11 @@ function emptyState() {
 function renderDetails() {
   const match = getMatch();
   const related = state.matches.filter((item) => item.id !== match.id).slice(0, 4);
+  const teamMap = teamCodeMap(state.matches);
+  const homeName = match.teams?.[0] || "";
+  const awayName = match.teams?.[1] || "";
+  const homeCode = teamCodeForName(homeName, teamMap);
+  const awayCode = teamCodeForName(awayName, teamMap);
 
   app.innerHTML = `
     ${header()}
@@ -397,7 +863,24 @@ function renderDetails() {
         <div>
           <button class="back-link" data-action="home">Back to matches</button>
           <h1>${match.title} - ${match.league}</h1>
-          <img class="event-poster" src="${match.image}" alt="${match.title}" />
+          <div class="event-teams" aria-label="Teams playing">
+            <div class="event-team">
+              ${homeCode ? teamLogoBadge(homeCode, "lg") : ""}
+              <div class="event-team-meta">
+                <strong>${escapeHtml(homeCode || "HOME")}</strong>
+                <span>${escapeHtml(homeName)}</span>
+              </div>
+            </div>
+            <span class="event-vs" aria-hidden="true">vs</span>
+            <div class="event-team">
+              ${awayCode ? teamLogoBadge(awayCode, "lg") : ""}
+              <div class="event-team-meta">
+                <strong>${escapeHtml(awayCode || "AWAY")}</strong>
+                <span>${escapeHtml(awayName)}</span>
+              </div>
+            </div>
+          </div>
+          ${matchHero({ homeCode, awayCode, bg: match.image, title: match.title, variant: "detail" })}
           <div class="score-row">
             <span>${match.availability}</span>
             <span>Cricket</span>
@@ -412,6 +895,11 @@ function renderDetails() {
           </div>
         </div>
         <aside class="booking-panel">
+          <div class="booking-teams" aria-hidden="true">
+            ${homeCode ? teamLogoBadge(homeCode, "sm") : ""}
+            <span class="booking-vs">vs</span>
+            ${awayCode ? teamLogoBadge(awayCode, "sm") : ""}
+          </div>
           <p>${match.date}</p>
           <p>${match.time}</p>
           <p>${match.venue}</p>
@@ -434,9 +922,19 @@ function renderDetails() {
 }
 
 function recommendCard(match) {
+  const teamMap = teamCodeMap(state.matches);
+  const homeName = match.teams?.[0] || "";
+  const awayName = match.teams?.[1] || "";
+  const homeCode = teamCodeForName(homeName, teamMap);
+  const awayCode = teamCodeForName(awayName, teamMap);
   return `
     <article class="recommend-card" data-action="details" data-id="${match.id}">
       <img src="${match.image}" alt="${match.shortTitle}" />
+      <div class="recommend-teams" aria-hidden="true">
+        ${homeCode ? teamLogoBadge(homeCode, "xs") : ""}
+        <span>vs</span>
+        ${awayCode ? teamLogoBadge(awayCode, "xs") : ""}
+      </div>
       <strong>${match.shortTitle}</strong>
       <span>${match.location}</span>
     </article>
@@ -659,6 +1157,7 @@ function render() {
   if (state.route.page === "match") renderDetails();
   else if (state.route.page === "seats") renderSeatMap();
   else if (state.route.page === "checkout") renderCheckout();
+  else if (state.route.page === "matches") renderAllMatches();
   else renderHome();
 }
 
