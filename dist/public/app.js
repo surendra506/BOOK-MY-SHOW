@@ -371,11 +371,6 @@ function header() {
           <span>Search</span>
           <input data-search value="${state.search}" />
         </label>
-        <select class="city-select" data-city aria-label="Filter by city">
-          ${cities.map((city) => (
-            `<option ${state.city === city ? "selected" : ""}>${city}</option>`
-          )).join("")}
-        </select>
       </header>
       <nav class="subnav" aria-label="BookMyShow sections">
         <a>Movies</a>
@@ -403,23 +398,16 @@ function renderHome() {
         <img src="/assists/dashboard.avif" alt="TATA IPL 2026 dashboard banner" />
       </section>
       <section class="explore-shell">
-        <aside class="filters-panel">
-          ${filtersPanel()}
-        </aside>
         <div class="sports-listing">
           <div class="sports-heading">
             <div>
-              <h1>Sports in ${state.city === "All Cities" ? "Ahmedabad" : state.city}</h1>
-              <p>${matches.length} upcoming match(es) found. Showing ${cards.length ? start + 1 : 0}-${Math.min(start + cards.length, matches.length)} with match number, date, day, time, home, away, and venue details.</p>
             </div>
             <div>
-              <button>Cricket</button>
-              <button>Outdoor</button>
               <button class="view-all-matches" data-action="viewAllMatches" type="button">View All Matches</button>
             </div>
           </div>
-          <div class="sports-grid">
-            ${cards.map(sportsCard).join("") || emptyState()}
+          <div class="matches-list">
+            ${cards.map(allMatchesCard).join("") || emptyState()}
           </div>
           ${pagination(totalPages, matches.length)}
         </div>

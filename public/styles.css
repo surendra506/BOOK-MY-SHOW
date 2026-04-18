@@ -66,6 +66,7 @@ button {
 }
 
 .site-header .search {
+  margin-left: auto;
   max-width: 420px;
   padding: 6px 10px;
   border-radius: 5px;
@@ -215,7 +216,7 @@ button {
 
 .explore-shell {
   display: grid;
-  grid-template-columns: 255px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 42px;
   align-items: start;
 }

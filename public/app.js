@@ -408,11 +408,6 @@ function header() {
           <span>Search</span>
           <input data-search value="${state.search}" />
         </label>
-        <select class="city-select" data-city aria-label="Filter by city">
-          ${cities.map((city) => (
-            `<option ${state.city === city ? "selected" : ""}>${city}</option>`
-          )).join("")}
-        </select>
       </header>
     </div>
   `;
@@ -431,9 +426,6 @@ function renderHome() {
         <img src="/assists/dashboard.avif" alt="TATA IPL 2026 dashboard banner" />
       </section>
       <section class="explore-shell">
-        <aside class="filters-panel">
-          ${filtersPanel()}
-        </aside>
         <div class="sports-listing">
           <div class="sports-heading">
             <div>
@@ -442,8 +434,8 @@ function renderHome() {
               <button class="view-all-matches" data-action="viewAllMatches" type="button">View All Matches</button>
             </div>
           </div>
-          <div class="sports-grid">
-            ${cards.map(sportsCard).join("") || emptyState()}
+          <div class="matches-list">
+            ${cards.map(allMatchesCard).join("") || emptyState()}
           </div>
           ${pagination(totalPages, matches.length)}
         </div>
