@@ -10,6 +10,7 @@ await mkdir(dist, { recursive: true });
 
 await cp(join(root, "public"), join(dist, "public"), { recursive: true });
 await cp(join(root, "assists"), join(dist, "assists"), { recursive: true });
+await cp(join(root, "assists"), join(dist, "public", "assists"), { recursive: true });
 await cp(join(root, "server.mjs"), join(dist, "server.mjs"));
 await cp(join(root, "README.md"), join(dist, "README.md"));
 
