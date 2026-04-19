@@ -2302,3 +2302,37 @@ h2 {
     grid-template-columns: repeat(5, 42px);
   }
 }
+
+@media (max-width: 820px) {
+  .site-header .topbar {
+    padding: 0 5%;
+    flex-wrap: wrap;
+    min-height: auto;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    gap: 10px;
+  }
+  .site-header .search {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+    max-width: 100%;
+  }
+  .subnav {
+    display: none; /* Hide subnav on small screens for app-like feel */
+  }
+  .site-header .nav-right {
+    gap: 8px;
+  }
+  .site-header .sign-in-btn {
+    padding: 6px 12px;
+  }
+  .match-row {
+     flex-direction: column;
+     gap: 10px;
+  }
+  .match-row-bottom {
+     width: 100%;
+     justify-content: space-between;
+  }
+}
