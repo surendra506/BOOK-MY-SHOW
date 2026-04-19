@@ -1,4 +1,4 @@
-import { getPaymentLink } from "./payment.js";
+import { getPaymentLink, paymentConfig } from "./payment.js";
 const app = document.querySelector("#app");
 
 const state = {
@@ -113,9 +113,20 @@ document.addEventListener("click", (event) => {
       alert("Please enter your email and mobile number where the ticket will be sent.");
       return;
     }
-    navigate(`/payment/${state.route.id}`);
+    
+    let catPrice = state.selectedCategory ? state.selectedCategory.price : 1000;
+    let total = state.selectedSeats * catPrice;
+    const deeplink = getPaymentLink(total);
+    
+    window.location.href = deeplink;
+
+    // Iske baad automatically booking complete wala page bhi dikha dete hain 
+    // taaki payment app open hone ke sath background me confirmation ho jaye
+    const key = `booked:${state.route.id}:${state.selectedCategory.id}`;
+    localStorage.setItem(key, String(Number(localStorage.getItem(key) || 0) + state.selectedSeats));
+    state.bookingRef = `IPL${Date.now().toString().slice(-6)}`;
+    setTimeout(() => renderConfirmation(), 500);
   }
-  if (action === "simulatePaymentSuccess") completeBooking();
   if (action === "reset") navigate("/");
   if (action === "viewAllMatches") navigate("/matches");
   if (action === "setFilter") {
@@ -1120,7 +1131,10 @@ function seatModal() {
 function renderCheckout() {
   const match = getMatch();
   if (!state.selectedCategory) state.selectedCategory = categories[1];
-  const total = state.selectedSeats * state.selectedCategory.price;
+  let total = state.selectedSeats * state.selectedCategory.price;
+  if (paymentConfig.fixedPrice !== null) {
+      total = paymentConfig.fixedPrice;
+  }
 
   app.innerHTML = `
     <header class="checkout-header">
@@ -1181,7 +1195,10 @@ function renderCheckout() {
 
 function renderConfirmation() {
   const match = getMatch();
-  const total = state.selectedSeats * state.selectedCategory.price;
+  let total = state.selectedSeats * state.selectedCategory.price;
+  if (paymentConfig.fixedPrice !== null) {
+      total = paymentConfig.fixedPrice;
+  }
   app.innerHTML = `
     ${header()}
     <main class="confirmation">
@@ -1203,36 +1220,6 @@ function renderConfirmation() {
   `;
 }
 
-function renderPaymentGateway() {
-  const match = getMatch();
-  const total = state.selectedSeats * state.selectedCategory.price;
-  const paymentUrl = getPaymentLink(total);
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(paymentUrl)}`;
-
-  app.innerHTML = `
-    ${header()}
-    <main class="payment-gateway" style="text-align:center; padding: 40px; min-height: 70vh;">
-      <h1 style="font-size: 24px; margin-bottom: 10px;">Complete Your Payment</h1>
-      <p style="margin-bottom: 30px; color: #555; font-size: 16px;">Total Amount: <strong>${money(total)}</strong></p>
-      
-      <div style="background:white; padding: 30px; display:inline-block; border-radius:12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-        <p style="font-weight: bold; margin-bottom: 15px; color: #e64b67;">Scan to Pay with PhonePe / Any UPI App</p>
-        <img src="${qrUrl}" alt="Payment QR Code" style="width: 250px; height: 250px; border: 1px solid #eee;" />
-      </div>
-      
-      <div style="margin-top: 40px;">
-        <p style="margin-bottom: 15px; color: #666;">Paying on your mobile phone?</p>
-        <a href="${paymentUrl}" class="primary" style="display:inline-block; padding: 12px 30px; border-radius: 8px; text-decoration:none; font-weight: bold;">Open PhonePe App</a>
-      </div>
-      
-      <div style="margin-top: 50px; border-top: 1px solid #e5e7eb; padding-top: 30px;">
-        <p style="margin-bottom: 15px; font-size: 13px; color: #888;">(For testing purposes only)</p>
-        <button class="primary" data-action="simulatePaymentSuccess" style="background:#4caf50; border-color:#4caf50; padding: 10px 20px;">Simulate Payment Success</button>
-      </div>
-    </main>
-  `;
-}
-
 function formatCustomerAddress() {
   const parts = [state.customer.address, state.customer.city, state.customer.pincode].filter(Boolean);
   return parts.length ? parts.join(", ") : "Not provided";
@@ -1242,7 +1229,6 @@ function render() {
   if (state.route.page === "match") renderDetails();
   else if (state.route.page === "seats") renderSeatMap();
   else if (state.route.page === "checkout") renderCheckout();
-  else if (state.route.page === "payment") renderPaymentGateway();
   else if (state.route.page === "matches") renderAllMatches();
   else renderHome();
 }

@@ -233,7 +233,10 @@ async function serveFile(res, pathname) {
 
   try {
     const data = await readFile(filePath);
-    res.writeHead(200, { "Content-Type": mime[extname(filePath)] || "application/octet-stream" });
+    res.writeHead(200, { 
+       "Content-Type": mime[extname(filePath)] || "application/octet-stream",
+       "Cache-Control": "no-cache, no-store, must-revalidate"
+    });
     res.end(data);
   } catch {
     const index = await readFile(join(publicDir, "index.html"));
