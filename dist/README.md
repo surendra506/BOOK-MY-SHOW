@@ -14,6 +14,12 @@ Open:
 http://localhost:4173
 ```
 
+If `localhost` doesn’t open, start the server with:
+
+```bash
+HOST=0.0.0.0 npm run dev
+```
+
 ## Features
 
 - Dynamic IPL match listings from a local API endpoint
@@ -35,4 +41,3 @@ public/app.js      Frontend booking flow
 public/styles.css  Responsive UI styles
 assists/           IPL banner and match images
 ```
-

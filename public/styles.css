@@ -98,17 +98,30 @@ button {
 }
 
 .brand {
+  display: flex;
+  align-items: center;
   border: 0;
   background: transparent;
   color: #4b5563;
   font-size: 24px;
   letter-spacing: 0;
   white-space: nowrap;
+  padding: 0;
 }
 
 .brand strong {
   color: var(--brand);
   font-weight: 900;
+}
+
+.brand-logo {
+  height: 80px;
+  width: auto;
+  display: block;
+}
+
+.site-header .brand-logo {
+  height: 100px;
 }
 
 .search {
@@ -434,11 +447,11 @@ button {
   margin-bottom: 14px;
 }
 
-.sports-heading > div:first-child {
+.sports-heading>div:first-child {
   display: block;
 }
 
-.sports-heading > div:last-child {
+.sports-heading>div:last-child {
   display: flex;
   gap: 8px;
 }
@@ -705,7 +718,7 @@ button {
   }
 }
 
-.sports-card-media > img {
+.sports-card-media>img {
   width: 100%;
   aspect-ratio: 0.78 / 1;
   display: block;
@@ -1196,7 +1209,7 @@ h2 {
   text-align: center;
 }
 
-.teams > strong {
+.teams>strong {
   color: #111827;
 }
 

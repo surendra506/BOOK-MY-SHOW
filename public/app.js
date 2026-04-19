@@ -1,3 +1,4 @@
+import { getPaymentLink } from "./payment.js";
 const app = document.querySelector("#app");
 
 const state = {
@@ -39,6 +40,8 @@ const state = {
     pincode: ""
   }
 };
+
+const brandLogo = `<img class="brand-logo" src="/assists/logo.png" alt="BookMyShow" />`;
 
 const categories = [
   { id: "1000", label: "B Block Upper", stand: "B Block", price: 1000, color: "#3f91a6", left: 42 },
@@ -103,7 +106,16 @@ document.addEventListener("click", (event) => {
   if (action === "seatCount") setSeatCount(Number(value));
   if (action === "continueSeats") confirmSeatCount();
   if (action === "proceedCheckout") continueToTicketMode();
-  if (action === "pay") completeBooking();
+  if (action === "pay") {
+    const email = (state.customer.email || "").trim();
+    const phone = (state.customer.phone || "").trim();
+    if (!email || !phone) {
+      alert("Please enter your email and mobile number where the ticket will be sent.");
+      return;
+    }
+    navigate(`/payment/${state.route.id}`);
+  }
+  if (action === "simulatePaymentSuccess") completeBooking();
   if (action === "reset") navigate("/");
   if (action === "viewAllMatches") navigate("/matches");
   if (action === "setFilter") {
@@ -402,7 +414,7 @@ function header() {
     <div class="site-header">
       <header class="topbar">
         <button class="brand" data-action="home" aria-label="Go home">
-          <span>book</span><strong>my</strong><span>show</span>
+          ${brandLogo}
         </button>
         <label class="search">
           <span>Search</span>
@@ -519,14 +531,14 @@ function renderAllMatches() {
           <h2>Teams</h2>
           <div class="teams-grid">
             ${teams.map((team) => team === "all"
-              ? teamChip({ label: "All", value: "all", active: state.filters.team === "all" })
-              : teamChip({
-                  label: teamMap[team] || team.split(" ").map((w) => w[0]).join("").slice(0, 3).toUpperCase(),
-                  value: team,
-                  active: state.filters.team === team,
-                  subtitle: team
-                })
-            ).join("")}
+    ? teamChip({ label: "All", value: "all", active: state.filters.team === "all" })
+    : teamChip({
+      label: teamMap[team] || team.split(" ").map((w) => w[0]).join("").slice(0, 3).toUpperCase(),
+      value: team,
+      active: state.filters.team === team,
+      subtitle: team
+    })
+  ).join("")}
           </div>
         </aside>
       </section>
@@ -639,8 +651,8 @@ function matchHero({ homeCode, awayCode, bg, title, variant }) {
     <div class="match-hero match-hero--${escapeHtmlAttr(variant || "card")} match-hero--no-bg"${bgStyle} aria-label="${escapeHtmlAttr(title || "")}">
       <div class="match-hero-single">
         ${singleSrc
-          ? `<img class="match-hero-single-img" src="${escapeHtmlAttr(singleSrc)}" alt="" loading="lazy" decoding="async"${fallbackAttr} />`
-          : `<span class="match-hero-fallback" data-show="flex">${escapeHtml(home || away || "IPL")}</span>`}
+      ? `<img class="match-hero-single-img" src="${escapeHtmlAttr(singleSrc)}" alt="" loading="lazy" decoding="async"${fallbackAttr} />`
+      : `<span class="match-hero-fallback" data-show="flex">${escapeHtml(home || away || "IPL")}</span>`}
       </div>
     </div>
   `;
@@ -705,57 +717,57 @@ function filtersPanel() {
   return `
     <h2>Filters</h2>
     ${filterAccordionSection({
-      id: "categories",
-      title: "Categories",
-      open: !!state.ui?.filterOpen?.categories,
-      body: filterChips("category", "categories", [
-        ["cricket", "Cricket"]
-      ])
-    })}
+    id: "categories",
+    title: "Categories",
+    open: !!state.ui?.filterOpen?.categories,
+    body: filterChips("category", "categories", [
+      ["cricket", "Cricket"]
+    ])
+  })}
     ${filterAccordionSection({
-      id: "date",
-      title: "Date",
-      open: !!state.ui?.filterOpen?.date,
-      body: filterChips("date", "date", [
-        ["all", "All Dates"],
-        ["today", "Today"],
-        ["weekend", "Weekend"],
-        ["apr", "April"],
-        ["may", "May"]
-      ])
-    })}
+    id: "date",
+    title: "Date",
+    open: !!state.ui?.filterOpen?.date,
+    body: filterChips("date", "date", [
+      ["all", "All Dates"],
+      ["today", "Today"],
+      ["weekend", "Weekend"],
+      ["apr", "April"],
+      ["may", "May"]
+    ])
+  })}
     ${filterAccordionSection({
-      id: "more",
-      title: "More Filters",
-      open: !!state.ui?.filterOpen?.more,
-      body: `
+    id: "more",
+    title: "More Filters",
+    open: !!state.ui?.filterOpen?.more,
+    body: `
         <div class="filter-subtitle">Time</div>
         <div class="filter-chip-row">
           ${filterChips("time", "more", [
-            ["all", "All Times"],
-            ["afternoon", "3:30 PM"],
-            ["evening", "7:30 PM"]
-          ])}
+      ["all", "All Times"],
+      ["afternoon", "3:30 PM"],
+      ["evening", "7:30 PM"]
+    ])}
         </div>
         <div class="filter-subtitle">Venue</div>
         <select class="filter-select" data-filter="venue" aria-label="Filter by venue">
           ${venueOptions.map((venue) => (
-            `<option value="${escapeHtmlAttr(venue)}" ${state.filters.venue === venue ? "selected" : ""}>${venue === "all" ? "All Venues" : escapeHtml(venue)}</option>`
-          )).join("")}
+      `<option value="${escapeHtmlAttr(venue)}" ${state.filters.venue === venue ? "selected" : ""}>${venue === "all" ? "All Venues" : escapeHtml(venue)}</option>`
+    )).join("")}
         </select>
       `
-    })}
+  })}
     ${filterAccordionSection({
-      id: "price",
-      title: "Price",
-      open: !!state.ui?.filterOpen?.price,
-      body: filterChips("price", "price", [
-        ["all", "All Prices"],
-        ["under1000", "Below ₹1000"],
-        ["1000to1300", "₹1000 - ₹1300"],
-        ["above1300", "Above ₹1300"]
-      ])
-    })}
+    id: "price",
+    title: "Price",
+    open: !!state.ui?.filterOpen?.price,
+    body: filterChips("price", "price", [
+      ["all", "All Prices"],
+      ["under1000", "Below ₹1000"],
+      ["1000to1300", "₹1000 - ₹1300"],
+      ["above1300", "Above ₹1300"]
+    ])
+  })}
     <button class="browse-button" type="button" data-action="browseVenues">Browse by Venues</button>
   `;
 }
@@ -997,7 +1009,7 @@ function renderSeatMap() {
   const match = getMatch();
   app.innerHTML = `
     <header class="seat-header">
-      <button class="brand" data-action="home"><span>book</span><strong>my</strong><span>show</span></button>
+      <button class="brand" data-action="home" aria-label="Go home">${brandLogo}</button>
       <button class="back-link" data-action="details" data-id="${match.id}">Back</button>
       <strong>${match.title} - ${match.league}</strong>
       <span>${state.selectedSeats} Tickets</span>
@@ -1112,7 +1124,7 @@ function renderCheckout() {
 
   app.innerHTML = `
     <header class="checkout-header">
-      <button class="brand" data-action="home"><span>book</span><strong>my</strong><span>show</span></button>
+      <button class="brand" data-action="home" aria-label="Go home">${brandLogo}</button>
       <strong>${match.title} - ${match.league}</strong>
     </header>
     <div class="steps">
@@ -1160,7 +1172,7 @@ function renderCheckout() {
         <div class="summary-row">
           <span>Total Amount</span>
           <strong>${money(total)}</strong>
-          <button class="primary" data-action="pay">Proceed to Pay</button>
+          <button class="primary buynow-button product-page-buy text-center col-6 btn-continue m-auto" data-action="pay">Proceed to Pay</button>
         </div>
       </section>
     </main>
@@ -1191,6 +1203,36 @@ function renderConfirmation() {
   `;
 }
 
+function renderPaymentGateway() {
+  const match = getMatch();
+  const total = state.selectedSeats * state.selectedCategory.price;
+  const paymentUrl = getPaymentLink(total);
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(paymentUrl)}`;
+
+  app.innerHTML = `
+    ${header()}
+    <main class="payment-gateway" style="text-align:center; padding: 40px; min-height: 70vh;">
+      <h1 style="font-size: 24px; margin-bottom: 10px;">Complete Your Payment</h1>
+      <p style="margin-bottom: 30px; color: #555; font-size: 16px;">Total Amount: <strong>${money(total)}</strong></p>
+      
+      <div style="background:white; padding: 30px; display:inline-block; border-radius:12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+        <p style="font-weight: bold; margin-bottom: 15px; color: #e64b67;">Scan to Pay with PhonePe / Any UPI App</p>
+        <img src="${qrUrl}" alt="Payment QR Code" style="width: 250px; height: 250px; border: 1px solid #eee;" />
+      </div>
+      
+      <div style="margin-top: 40px;">
+        <p style="margin-bottom: 15px; color: #666;">Paying on your mobile phone?</p>
+        <a href="${paymentUrl}" class="primary" style="display:inline-block; padding: 12px 30px; border-radius: 8px; text-decoration:none; font-weight: bold;">Open PhonePe App</a>
+      </div>
+      
+      <div style="margin-top: 50px; border-top: 1px solid #e5e7eb; padding-top: 30px;">
+        <p style="margin-bottom: 15px; font-size: 13px; color: #888;">(For testing purposes only)</p>
+        <button class="primary" data-action="simulatePaymentSuccess" style="background:#4caf50; border-color:#4caf50; padding: 10px 20px;">Simulate Payment Success</button>
+      </div>
+    </main>
+  `;
+}
+
 function formatCustomerAddress() {
   const parts = [state.customer.address, state.customer.city, state.customer.pincode].filter(Boolean);
   return parts.length ? parts.join(", ") : "Not provided";
@@ -1200,6 +1242,7 @@ function render() {
   if (state.route.page === "match") renderDetails();
   else if (state.route.page === "seats") renderSeatMap();
   else if (state.route.page === "checkout") renderCheckout();
+  else if (state.route.page === "payment") renderPaymentGateway();
   else if (state.route.page === "matches") renderAllMatches();
   else renderHome();
 }

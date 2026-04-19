@@ -27,7 +27,8 @@ const state = {
       date: false,
       more: false,
       price: false
-    }
+    },
+    pickupExpanded: false
   },
   customer: {
     name: "",
@@ -38,6 +39,8 @@ const state = {
     pincode: ""
   }
 };
+
+const brandLogo = `<img class="brand-logo" src="/assists/logo.png" alt="BookMyShow" />`;
 
 const categories = [
   { id: "1000", label: "B Block Upper", stand: "B Block", price: 1000, color: "#3f91a6", left: 42 },
@@ -137,6 +140,10 @@ document.addEventListener("click", (event) => {
     render();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
+  if (action === "togglePickupInfo") {
+    if (state.ui) state.ui.pickupExpanded = !state.ui.pickupExpanded;
+    render();
+  }
   if (action === "clearFilters") {
     state.city = "All Cities";
     state.search = "";
@@ -157,9 +164,20 @@ document.addEventListener("toggle", (event) => {
 
 document.addEventListener("input", (event) => {
   if (event.target.matches("[data-search]")) {
-    state.search = event.target.value;
+    const input = event.target;
+    const value = input.value;
+    const selectionStart = input.selectionStart;
+    const selectionEnd = input.selectionEnd;
+    state.search = value;
     state.page = 1;
     render();
+    const next = document.querySelector("[data-search]");
+    if (next && next instanceof HTMLInputElement) {
+      next.focus();
+      if (selectionStart !== null && selectionEnd !== null) {
+        next.setSelectionRange(selectionStart, selectionEnd);
+      }
+    }
   }
 
   if (event.target.matches("[data-customer]")) {
@@ -289,6 +307,13 @@ function continueToTicketMode() {
 }
 
 function completeBooking() {
+  const email = (state.customer.email || "").trim();
+  const phone = (state.customer.phone || "").trim();
+  if (!email || !phone) {
+    alert("Please enter your email and mobile number where the ticket will be sent.");
+    return;
+  }
+
   const key = `booked:${state.route.id}:${state.selectedCategory.id}`;
   localStorage.setItem(key, String(Number(localStorage.getItem(key) || 0) + state.selectedSeats));
   state.bookingRef = `IPL${Date.now().toString().slice(-6)}`;
@@ -299,7 +324,21 @@ function filteredMatches() {
   const q = state.search.trim().toLowerCase();
   return state.matches.filter((match) => {
     const cityMatch = state.city === "All Cities" || match.location === state.city;
-    const searchMatch = !q || `${match.matchNo} ${match.title} ${match.venue} ${match.league} ${match.date} ${match.time}`.toLowerCase().includes(q);
+    const searchText = [
+      match.matchNo,
+      match.title,
+      match.shortTitle,
+      ...(match.teams || []),
+      match.venue,
+      match.location,
+      match.league,
+      match.date,
+      match.time
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    const searchMatch = !q || searchText.includes(q);
     const categoryMatch = matchesCategoryFilter(match);
     const dateMatch = matchesDateFilter(match);
     const timeMatch = matchesTimeFilter(match);
@@ -365,22 +404,13 @@ function header() {
     <div class="site-header">
       <header class="topbar">
         <button class="brand" data-action="home" aria-label="Go home">
-          <span>book</span><strong>my</strong><span>show</span>
+          ${brandLogo}
         </button>
         <label class="search">
           <span>Search</span>
           <input data-search value="${state.search}" />
         </label>
       </header>
-      <nav class="subnav" aria-label="BookMyShow sections">
-        <a>Movies</a>
-        <a>Stream</a>
-        <a>Events</a>
-        <a>Plays</a>
-        <a class="active">Sports</a>
-        <a>Activities</a>
-        <a>Buzz</a>
-      </nav>
     </div>
   `;
 }
@@ -598,21 +628,21 @@ function matchHero({ homeCode, awayCode, bg, title, variant }) {
 
   const home = homeCode || "";
   const away = awayCode || "";
-  const bgStyle = bg ? ` style="--hero-bg: url('${escapeHtmlAttr(bg)}')"` : "";
+  const bgStyle = "";
+  const singleSrc = bg || teamLogoCandidates(home)[0] || teamLogoCandidates(away)[0] || "";
+  const fallbackCandidates = [
+    ...teamLogoCandidates(home),
+    ...teamLogoCandidates(away),
+    "/assists/dashboard.avif"
+  ].filter(Boolean);
+  const [, ...fallbacks] = fallbackCandidates.filter((src, index, arr) => arr.indexOf(src) === index);
+  const fallbackAttr = fallbacks.length ? ` data-fallback="${escapeHtmlAttr(fallbacks.join("|"))}"` : "";
   return `
-    <div class="match-hero match-hero--${escapeHtmlAttr(variant || "card")}"${bgStyle} aria-label="${escapeHtmlAttr(title || "")}">
-      <div class="match-hero-sides">
-        <div class="match-hero-side match-hero-side--home">
-          ${teamHeroImage(home)}
-          <span class="match-hero-code">${escapeHtml(home || "HOME")}</span>
-        </div>
-        <div class="match-hero-center" aria-hidden="true">
-          <span class="match-hero-vs">VS</span>
-        </div>
-        <div class="match-hero-side match-hero-side--away">
-          ${teamHeroImage(away)}
-          <span class="match-hero-code">${escapeHtml(away || "AWAY")}</span>
-        </div>
+    <div class="match-hero match-hero--${escapeHtmlAttr(variant || "card")} match-hero--no-bg"${bgStyle} aria-label="${escapeHtmlAttr(title || "")}">
+      <div class="match-hero-single">
+        ${singleSrc
+          ? `<img class="match-hero-single-img" src="${escapeHtmlAttr(singleSrc)}" alt="" loading="lazy" decoding="async"${fallbackAttr} />`
+          : `<span class="match-hero-fallback" data-show="flex">${escapeHtml(home || away || "IPL")}</span>`}
       </div>
     </div>
   `;
@@ -814,26 +844,33 @@ function pagination(totalPages, totalMatches) {
   `;
 }
 
+function cardDateLabel(match) {
+  const date = parseRawDate(match?.rawDate);
+  if (!(date instanceof Date) || Number.isNaN(date.valueOf())) return match?.date || "";
+  const weekday = date.toLocaleString("en-IN", { weekday: "short" });
+  const month = date.toLocaleString("en-IN", { month: "short" });
+  return `${weekday}, ${date.getDate()} ${month}`;
+}
+
 function sportsCard(match) {
   const teamMap = teamCodeMap(state.matches);
   const homeName = match.teams?.[0] || "";
   const awayName = match.teams?.[1] || "";
   const homeCode = teamCodeForName(homeName, teamMap);
   const awayCode = teamCodeForName(awayName, teamMap);
+  const promoted = match.matchNo % 9 === 0;
   return `
     <article class="sports-card" data-action="details" data-id="${match.id}">
       <div class="sports-card-media">
         ${matchHero({ homeCode, awayCode, bg: match.image, title: match.shortTitle || match.title, variant: "card" })}
+        ${promoted ? `<span class="sports-card-badge">PROMOTED</span>` : ""}
+        <div class="sports-card-date">${escapeHtml(cardDateLabel(match))}</div>
       </div>
-      <div>
-        <small class="match-number">Match ${match.matchNo}</small>
-        <strong>${match.shortTitle || match.title}</strong>
-        <p><b>Home:</b> ${match.teams[0]}</p>
-        <p><b>Away:</b> ${match.teams[1]}</p>
-        <p>${match.venue}</p>
-        <small>${match.date} • ${match.time}</small>
+      <div class="sports-card-body">
+        <strong title="${escapeHtmlAttr(match.title)}">${escapeHtml((match.shortTitle || match.title || "").toUpperCase())}</strong>
+        <p>${escapeHtml(match.venue || match.location || "")}</p>
+        <small>T20</small>
         <span>${money(match.priceFrom)} onwards</span>
-        <em>${match.availability || "Available"} tickets</em>
       </div>
     </article>
   `;
@@ -962,7 +999,7 @@ function renderSeatMap() {
   const match = getMatch();
   app.innerHTML = `
     <header class="seat-header">
-      <button class="brand" data-action="home"><span>book</span><strong>my</strong><span>show</span></button>
+      <button class="brand" data-action="home" aria-label="Go home">${brandLogo}</button>
       <button class="back-link" data-action="details" data-id="${match.id}">Back</button>
       <strong>${match.title} - ${match.league}</strong>
       <span>${state.selectedSeats} Tickets</span>
@@ -1077,7 +1114,7 @@ function renderCheckout() {
 
   app.innerHTML = `
     <header class="checkout-header">
-      <button class="brand" data-action="home"><span>book</span><strong>my</strong><span>show</span></button>
+      <button class="brand" data-action="home" aria-label="Go home">${brandLogo}</button>
       <strong>${match.title} - ${match.league}</strong>
     </header>
     <div class="steps">
@@ -1094,39 +1131,31 @@ function renderCheckout() {
             <h3>Box Office Pick Up</h3>
             <p>Customer(s) will receive an order confirmation via email, which must be presented at the pickup counter to collect ticket(s).</p>
             <p>Cardholder should be present with the card used for booking.</p>
-            <a>Read More</a>
+            ${state.ui?.pickupExpanded ? `
+              <div class="pickup-more" role="note">
+                <p>Keep your booking ID and a valid photo ID handy at the venue pickup counter.</p>
+                <p>Arrive early to avoid queues. Ticket pickup timings may vary by stadium.</p>
+              </div>
+            ` : ""}
+            <button type="button" class="pickup-more-toggle" data-action="togglePickupInfo">
+              ${state.ui?.pickupExpanded ? "Read Less" : "Read More"}
+            </button>
           </div>
           <div class="pickup-icon">BO</div>
         </div>
         <div class="customer-form">
           <div class="form-heading">
-            <h3>Fill your details</h3>
-            <p>These details will be used for booking confirmation and ticket pickup verification.</p>
+            <h3>Ticket Delivery Details</h3>
+            <p>Please enter your email and mobile number where the ticket will be sent.</p>
           </div>
           <div class="form-grid">
             <label>
-              Full Name
-              <input data-customer="name" value="${state.customer.name}" placeholder="Enter your full name" />
-            </label>
-            <label>
               Mobile Number
-              <input data-customer="phone" value="${state.customer.phone}" placeholder="Enter mobile number" inputmode="tel" />
+              <input type="tel" data-customer="phone" value="${state.customer.phone}" placeholder="Enter mobile number" inputmode="tel" autocomplete="tel" required />
             </label>
             <label>
               Email Address
-              <input data-customer="email" value="${state.customer.email}" placeholder="Enter email address" inputmode="email" />
-            </label>
-            <label>
-              City
-              <input data-customer="city" value="${state.customer.city}" placeholder="Enter city" />
-            </label>
-            <label class="full-field">
-              Address
-              <textarea data-customer="address" placeholder="House / Street / Area">${state.customer.address}</textarea>
-            </label>
-            <label>
-              Pincode
-              <input data-customer="pincode" value="${state.customer.pincode}" placeholder="Enter pincode" inputmode="numeric" />
+              <input type="email" data-customer="email" value="${state.customer.email}" placeholder="Enter email address" inputmode="email" autocomplete="email" required />
             </label>
           </div>
         </div>
@@ -1155,9 +1184,8 @@ function renderConfirmation() {
           <p><strong>Stand:</strong> ${state.selectedCategory.label}</p>
           <p><strong>Venue:</strong> ${match.venue}</p>
           <p><strong>Amount:</strong> ${money(total)}</p>
-          <p><strong>Name:</strong> ${state.customer.name || "Not provided"}</p>
+          <p><strong>Email:</strong> ${state.customer.email || "Not provided"}</p>
           <p><strong>Mobile:</strong> ${state.customer.phone || "Not provided"}</p>
-          <p><strong>Address:</strong> ${formatCustomerAddress()}</p>
         </div>
         <button class="primary" data-action="reset">Book Another Match</button>
       </section>

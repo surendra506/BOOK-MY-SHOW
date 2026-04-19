@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 const root = fileURLToPath(new URL(".", import.meta.url));
 const publicDir = join(root, "public");
 const port = Number(process.env.PORT || 4173);
-const host = "127.0.0.1";
+const host = process.env.HOST || "0.0.0.0";
 
 const mime = {
   ".html": "text/html; charset=utf-8",
@@ -17,6 +17,7 @@ const mime = {
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
   ".avif": "image/avif",
+  ".webp": "image/webp",
   ".svg": "image/svg+xml"
 };
 
@@ -123,13 +124,16 @@ const venueByCity = {
 };
 
 const imageByTeam = {
-  "Kolkata Knight Riders": "/assists/media-desktop-kolkata-knight-riders-vs-rajasthan-royals-0-2026-3-28-t-6-2-55.jpg",
-  "Rajasthan Royals": "/assists/media-desktop-kolkata-knight-riders-vs-rajasthan-royals-0-2026-3-28-t-6-2-55.jpg",
-  "Gujarat Titans": "/assists/media-desktop-gujarat-titans-vs-chennai-super-kings-tata-ipl-2026-0-2026-4-5-t-11-33-13.avif",
-  "Chennai Super Kings": "/assists/media-desktop-gujarat-titans-vs-chennai-super-kings-tata-ipl-2026-0-2026-4-5-t-11-33-13.avif",
-  "Mumbai Indians": "/assists/media-desktop-mumbai-indians-vs-lucknow-super-giants-0-2026-4-10-t-12-1-34.avif",
-  "Lucknow Super Giants": "/assists/media-desktop-lucknow-super-giants-vs-rajasthan-royals-0-2026-4-1-t-8-42-10.avif",
-  "Royal Challengers Bengaluru": "/assists/media-desktop-gujarat-titans-vs-royal-challengers-bengaluru-tata-ipl-2026-0-2026-4-16-t-10-48-18.avif"
+  "Chennai Super Kings": "/assists/csk.jpeg",
+  "Delhi Capitals": "/assists/dc.jpeg",
+  "Gujarat Titans": "/assists/gt.jpeg",
+  "Kolkata Knight Riders": "/assists/kkr.webp",
+  "Lucknow Super Giants": "/assists/lsg.jpeg",
+  "Mumbai Indians": "/assists/mi.jpeg",
+  "Punjab Kings": "/assists/punjba.jpeg",
+  "Rajasthan Royals": "/assists/rr.jpeg",
+  "Royal Challengers Bengaluru": "/assists/rcb.jpeg",
+  "Sunrisers Hyderabad": "/assists/srh.jpeg"
 };
 
 const priceByCity = {
@@ -268,7 +272,8 @@ function listen(nextPort) {
   });
 
   server.listen(nextPort, host, () => {
-    console.log(`IPL booking app running at http://localhost:${nextPort}`);
+    const urlHost = host === "0.0.0.0" ? "localhost" : host;
+    console.log(`IPL booking app running at http://${urlHost}:${nextPort}`);
   });
 }
 

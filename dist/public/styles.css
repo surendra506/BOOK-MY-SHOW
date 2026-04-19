@@ -98,17 +98,30 @@ button {
 }
 
 .brand {
+  display: flex;
+  align-items: center;
   border: 0;
   background: transparent;
   color: #4b5563;
   font-size: 24px;
   letter-spacing: 0;
   white-space: nowrap;
+  padding: 0;
 }
 
 .brand strong {
   color: var(--brand);
   font-weight: 900;
+}
+
+.brand-logo {
+  height: 80px;
+  width: auto;
+  display: block;
+}
+
+.site-header .brand-logo {
+  height: 100px;
 }
 
 .search {
@@ -206,7 +219,7 @@ button {
 
 .explore-banner img {
   width: 100%;
-  height: 310px;
+  height: clamp(420px, 34vw, 640px);
   display: block;
   object-fit: cover;
   object-position: center 36%;
@@ -486,6 +499,50 @@ button {
 
 .sports-card-media {
   position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.14);
+}
+
+.sports-card:hover .sports-card-media {
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.18);
+  transform: translateY(-2px);
+  transition: box-shadow 160ms ease, transform 160ms ease;
+}
+
+.sports-card .match-hero--card {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.sports-card-date {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.88);
+  color: rgba(255, 255, 255, 0.98);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  font-size: 13px;
+}
+
+.sports-card-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: #e11d48;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.sports-card-body {
+  padding-top: 10px;
 }
 
 .match-hero {
@@ -509,6 +566,11 @@ button {
   z-index: 0;
 }
 
+.match-hero--no-bg::before {
+  background-image: none;
+  opacity: 0;
+}
+
 .match-hero::after {
   content: "";
   position: absolute;
@@ -530,6 +592,27 @@ button {
 .match-hero--detail {
   height: 380px;
   border-radius: 8px;
+}
+
+.match-hero-single {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.match-hero-single-img {
+  width: min(420px, 86%);
+  height: auto;
+  aspect-ratio: 1 / 1;
+  border-radius: 18px;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.25);
 }
 
 .match-hero-sides {
@@ -623,6 +706,11 @@ button {
     height: 280px;
   }
 
+  .match-hero-single-img {
+    width: min(240px, 78%);
+    border-radius: 14px;
+  }
+
   .match-hero-team-img,
   .match-hero-fallback {
     width: min(170px, 80%);
@@ -665,6 +753,10 @@ button {
   color: #171c26;
   font-size: 17px;
   line-height: 1.25;
+  text-transform: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sports-card b {
@@ -681,6 +773,9 @@ button {
   font-size: 14px;
   line-height: 1.25;
   font-style: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sports-card span {
@@ -763,7 +858,7 @@ button {
 
 .matches-banner img {
   width: 100%;
-  height: 220px;
+  height: clamp(340px, 28vw, 520px);
   display: block;
   object-fit: cover;
   object-position: center 36%;
@@ -1908,6 +2003,20 @@ h2 {
 .pickup-card a {
   color: var(--brand);
   font-weight: 900;
+}
+
+.pickup-more-toggle {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--brand);
+  font-weight: 900;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.pickup-more p {
+  margin: 10px 0 0;
 }
 
 .pickup-icon {
