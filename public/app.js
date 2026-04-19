@@ -44,16 +44,11 @@ const state = {
 const brandLogo = `<img class="brand-logo" src="/assists/logo.png" alt="BookMyShow" />`;
 
 const categories = [
-  { id: "1000", label: "B Block Upper", stand: "B Block", price: 1000, color: "#3f91a6", left: 42 },
-  { id: "1200", label: "J Block Olivol Pavilion", stand: "J Block", price: 1200, color: "#e44878", left: 28 },
-  { id: "1500", label: "D Block Clubhouse", stand: "D Block", price: 1500, color: "#2b7892", left: 36 },
-  { id: "1800", label: "Club House Lower Tier", stand: "Club House", price: 1800, color: "#8550bf", left: 18 },
-  { id: "3000", label: "Club House Upper Tier", stand: "Club House", price: 3000, color: "#e9953e", left: 12 },
-  { id: "3300", label: "F1 Block Jio Pavilion", stand: "F1 Block", price: 3300, color: "#d84482", left: 10 },
-  { id: "3500", label: "E Block BK Tyres Pavilion", stand: "E Block", price: 3500, color: "#4599ad", left: 8 },
-  { id: "4000", label: "B1 Block Premium", stand: "B1 Block", price: 4000, color: "#61b6e2", left: 6 },
-  { id: "8000", label: "Corporate Box", stand: "Corporate", price: 8000, color: "#8e61c8", left: 4 },
-  { id: "60000", label: "VIP Hospitality Suite", stand: "Suite", price: 60000, color: "#d45762", left: 2 }
+  { id: "599", label: "General Stand", stand: "General", price: 599, color: "#3f91a6", left: 145 },
+  { id: "799", label: "East Stand Lower", stand: "East Stand", price: 799, color: "#e44878", left: 82 },
+  { id: "999", label: "West Stand Premium", stand: "West Stand", price: 999, color: "#2b7892", left: 45 },
+  { id: "1199", label: "Pavilion VIP", stand: "Pavilion", price: 1199, color: "#e9953e", left: 20 },
+  { id: "1499", label: "Corporate Suite", stand: "Corporate", price: 1499, color: "#8550bf", left: 8 }
 ];
 
 const sponsors = ["TATA", "Angel One", "RuPay", "CEAT", "My11Circle"];
@@ -562,24 +557,39 @@ function allMatchesCard(match) {
   const homeCode = teamCodeForName(match.teams?.[0], teamMap);
   const awayCode = teamCodeForName(match.teams?.[1], teamMap);
   return `
-    <article class="match-row" data-action="details" data-id="${match.id}">
-      <div class="match-row-top">
-        <div class="match-row-titlewrap">
-          ${homeCode ? teamLogoInline(homeCode) : ""}
-          ${awayCode ? teamLogoInline(awayCode) : ""}
-          <strong class="match-row-title">${match.shortTitle || match.title}</strong>
+    <article class="premium-match-card" data-action="details" data-id="${match.id}">
+      <div class="pmc-header">
+        <span class="pmc-date">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          ${match.date}
+        </span>
+        <span class="pmc-time">${match.time}</span>
+      </div>
+      
+      <div class="pmc-teams-area">
+        <div class="pmc-team">
+          <div class="pmc-logo-wrap">${homeCode ? teamLogoInline(homeCode) : ""}</div>
+          <span class="pmc-team-name">${match.teams?.[0] || "-"}</span>
         </div>
-        <span class="match-row-date">${match.date} • ${match.time}</span>
+        <div class="pmc-vs">VS</div>
+        <div class="pmc-team">
+          <div class="pmc-logo-wrap">${awayCode ? teamLogoInline(awayCode) : ""}</div>
+          <span class="pmc-team-name">${match.teams?.[1] || "-"}</span>
+        </div>
       </div>
-      <div class="match-row-meta">
-        <span><b>Home:</b> ${match.teams?.[0] || "-"}</span>
-        <span><b>Away:</b> ${match.teams?.[1] || "-"}</span>
-        <span><b>Venue:</b> ${match.venue}</span>
+      
+      <div class="pmc-venue">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e64b67" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        ${match.venue}
       </div>
-      <div class="match-row-bottom">
-        <span class="match-row-pill">Match ${match.matchNo}</span>
-        <span class="match-row-price">${money(match.priceFrom)} onwards</span>
-        <span class="match-row-availability">${match.availability || "Available"} tickets</span>
+      
+      <div class="pmc-status-row">
+        <span class="pmc-hurry">Hurry! Seats Selling Out 🚀</span>
+        <span class="pmc-few">${match.availability || "Only a Few Left! 🔥"}</span>
+      </div>
+      
+      <div class="pmc-btn-wrap">
+        <button type="button" class="pmc-book-btn">Book Tickets</button>
       </div>
     </article>
   `;
@@ -1058,7 +1068,7 @@ function categoryRow(category) {
     <button class="category-row ${left === 0 ? "sold" : ""}" data-action="selectCategory" data-id="${category.id}">
       <span style="background:${category.color}"></span>
       <div>
-        <strong>${category.price}</strong>
+        <strong>${money(category.price)}</strong>
         <p>${category.label}</p>
       </div>
       <small>${left ? `${left} left` : "Sold out"}</small>

@@ -403,7 +403,8 @@ button {
 
 .filter-chip.active {
   border-color: var(--brand);
-  background: #fff0f4;
+  background: var(--brand);
+  color: #ffffff;
   box-shadow: 0 0 0 3px rgba(230, 75, 103, 0.08);
 }
 
@@ -431,12 +432,16 @@ button {
 .browse-button {
   width: 100%;
   min-height: 42px;
-  border: 1px solid #f2b7c3;
+  border: 1px solid var(--brand);
   border-radius: 4px;
-  background: white;
-  color: var(--brand);
+  background: var(--brand);
+  color: #ffffff;
   font-size: 14px;
   font-weight: 800;
+}
+
+.browse-button:hover {
+  background: var(--brand-dark);
 }
 
 .sports-heading {
@@ -469,14 +474,20 @@ button {
 
 .view-all-matches {
   min-height: 28px;
-  padding: 6px 12px;
+  padding: 6px 16px;
   border-radius: 999px;
-  border: 1px solid #f0b0bd;
-  background: #ffffff;
-  color: var(--brand);
+  border: 1px solid var(--brand);
+  background: var(--brand);
+  color: #ffffff;
   font-size: 11px;
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: 0.02em;
+  transition: all 0.2s ease;
+}
+
+.view-all-matches:hover {
+  background: var(--brand-dark);
+  box-shadow: 0 4px 10px rgba(230, 75, 103, 0.2);
 }
 
 .view-all-matches.secondary {
@@ -791,11 +802,12 @@ button {
 .match-number {
   width: fit-content;
   margin-top: 11px !important;
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: #fff0f4;
-  color: var(--brand) !important;
-  font-weight: 900;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--brand);
+  color: #ffffff !important;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .pagination {
@@ -1615,6 +1627,15 @@ h2 {
   border-right: 1px solid var(--line);
 }
 
+.category-panel h1 {
+  font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 16px;
+  margin-bottom: 6px;
+}
+
 .mini-teams {
   display: flex;
   align-items: center;
@@ -2208,7 +2229,7 @@ h2 {
   }
 
   .sports-heading {
-    align-items: flex-start;
+    align-items: flex-end;
     flex-direction: column;
   }
 
@@ -2263,6 +2284,112 @@ h2 {
   }
 }
 
+.premium-match-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  border: 1px solid var(--line);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.premium-match-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+.pmc-header {
+  background: var(--brand);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.pmc-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pmc-time {
+  font-weight: 700;
+}
+.pmc-teams-area {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 30px;
+}
+.pmc-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 40%;
+}
+.pmc-logo-wrap img {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: 1px solid #ebebeb;
+  padding: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.pmc-team-name {
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  color: #333;
+}
+.pmc-vs {
+  font-size: 18px;
+  font-weight: 900;
+  color: #111;
+}
+.pmc-venue {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 24px 16px;
+  font-size: 13px;
+  color: #666;
+}
+.pmc-status-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 24px 16px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.pmc-hurry {
+  color: #2ecc71;
+}
+.pmc-few {
+  color: #e64b67;
+}
+.pmc-btn-wrap {
+  padding: 0 16px 16px;
+}
+.pmc-book-btn {
+  width: 100%;
+  background: var(--brand);
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  outline: none;
+}
+.pmc-book-btn:hover {
+  background: var(--brand-dark);
+}
+
 @media (max-width: 560px) {
   h1 {
     font-size: 24px;
@@ -2277,6 +2404,13 @@ h2 {
     display: flex;
     align-items: stretch;
     text-align: center;
+  }
+
+  .seat-header strong {
+    font-size: 13px;
+    margin: 6px 0;
+    max-width: 100%;
+    line-height: 1.4;
   }
 
   .recommend-grid {
@@ -2321,11 +2455,12 @@ h2 {
     justify-content: flex-start;
   }
   .site-header .brand-logo {
-    height: 56px;
+    height: 38px;
     width: auto;
     max-width: 100%;
     object-fit: contain;
-    object-position: left;
+    transform: scale(2.2);
+    transform-origin: left center;
   }
   .site-header .search {
     flex: 0 0 50%; /* Adha page search */
